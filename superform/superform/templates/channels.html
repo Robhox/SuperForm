@@ -30,7 +30,7 @@
             {% endfor %}
         </tbody>
     </table>
-    <form class="form-inline" method="post">
+    <form class="form-inline" method="post" onsubmit="Correction()">
         <input type="hidden" name="@action" value="new">
         <label class="sr-only" for="inlineFormInputText">Username</label>
         <label class="sr-only" for="inlineFormCustomSelectModule">Module</label>
@@ -108,6 +108,14 @@
 {% endblock %}
 {% block scripts %}
     <script>
+
+
+        function Correction() {
+            var corr_prov = $("#inlineFormInputText").val();
+            corr= corr_prov.replace(/([,:;.?!")'{}(^+=~%$ ])/g, "_");
+            $("#inlineFormInputText").val(corr);
+        }
+
         $('#deleteModal').on('show.bs.modal', function (event) {
             var button = $(event.relatedTarget); // Button that triggered the modal
             $(this).find('#channel-name').text(button.data('name'));

@@ -5,11 +5,10 @@ import tempfile
 
 import pytest
 
-from superform.models import Authorization, Channel
-from superform import app, db, Post, User
+from superform.models import Authorization, Channel, User
+from superform import app, db, Post
 from superform.utils import datetime_converter, str_converter, get_module_full_name
-from superform.users import  is_moderator, get_moderate_channels_for_user,channels_available_for_user
-
+from superform.users import is_moderator, get_moderate_channels_for_user, channels_available_for_user
 
 @pytest.fixture
 def client():
@@ -47,7 +46,7 @@ def login(client, login):
 def test_index_not_logged_in(client):
     rv = client.get('/', follow_redirects=True)
     assert rv.status_code == 200
-    assert "Your are not logged in." in rv.data.decode()
+    assert "Please, log in" in rv.data.decode()
 
 
 def test_other_pages_not_logged_in(client):
@@ -74,17 +73,20 @@ def test_log_out(client):
     assert rv2.status_code == 200
     rv2 = client.get('/logout',follow_redirects=True)
     assert rv2.status_code == 200
-    assert "Your are not logged in." in rv2.data.decode()
+    assert "Please, log in" in rv2.data.decode()
 
 
 def test_new_post(client):
     login(client,"myself")
-    rv = client.post('/new',data=dict(titlepost='A new test post', descrpost= "A description", linkurlpost="http://www.test.com", imagepost="image.jpg",datefrompost="2018-07-01",dateuntilpost="2018-07-01"))
+    rv = client.post('/new',data=dict(titlepost='A new test post', descriptionpost="A description", linkurlpost="http://www.test.com", imagepost="image.jpg",datefrompost="2018-07-01",dateuntilpost="2018-07-01"))
     assert rv.status_code ==302
     posts = db.session.query(Post).all()
     assert len(posts)>0
     last_add = posts[-1]
     assert last_add.title == 'A new test post'
+    assert last_add.description == "A description"
+    assert last_add.link_url == "http://www.test.com"
+    assert last_add.image_url == "image.jpg"
     db.session.query(Post).filter(Post.id == last_add.id).delete()
     db.session.commit()
     
@@ -155,7 +157,6 @@ def test_channels_available_for_user():
     user = User(id=3, name="test", first_name="utilisateur3", email="utilisateur3.test@uclouvain.be")
     db.session.add(user)
     assert len(channels_available_for_user(user.id)) == 0
-
 
 
 

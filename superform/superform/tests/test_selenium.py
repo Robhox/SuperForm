@@ -33,18 +33,18 @@ def prepare():
     pytest.driver.close()
 
 
-def test_add_post_linkedin_1():
-    title = 'test_linkedin title 1'
-    description = 'test_linkedin description 1'
+def test_add_post_linkedin():
+    title = 'test_linkedin title'
+    description = 'test_linkedin description'
     selenium_utils.add_new_post(pytest.driver, ['test_linkedin'], title, description, pytest.now, pytest.now, 'https://www.google.be/')
     pytest.driver.get(selenium_utils.index_url)
 
     assert pytest.driver.find_elements_by_css_selector('a[href="/moderate/1/1"]')
 
 
-def test_add_post_slack_1():
-    title = 'test_slack title 1'
-    description = 'test_slack description 1'
+def test_add_post_slack():
+    title = 'test_slack title'
+    description = 'test_slack description'
     selenium_utils.add_new_post(pytest.driver, ['test_slack'], title, description, pytest.now, pytest.now, 'https://www.google.be/')
     pytest.driver.get(selenium_utils.index_url)
 
@@ -63,23 +63,14 @@ def test_publish_post_slack_1():
     assert not pytest.driver.find_elements_by_css_selector('a[href="/moderate/2/2"]')
 
 
-def test_add_post_linkedin_2():
-    title = 'test_linkedin title 2'
-    description = 'test_linkedin description 2'
-    selenium_utils.add_new_post(pytest.driver, ['test_linkedin'], title, description, pytest.now, pytest.now, 'https://www.google.be/')
+def test_add_post_linkedin_slack():
+    title = 'test_linkedin_slack title'
+    description = 'test_linkedin_slack description'
+    selenium_utils.add_new_post(pytest.driver, ['test_linkedin', 'test_slack'], title, description, pytest.now, pytest.now, 'https://www.google.be/')
     pytest.driver.get(selenium_utils.index_url)
 
     assert pytest.driver.find_elements_by_css_selector('a[href="/moderate/3/1"]')
-
-
-def test_add_post_slack_2():
-    title = 'test_slack title 2'
-    description = 'test_slack description 2'
-    selenium_utils.add_new_post(pytest.driver, ['test_slack'], title, description, pytest.now, pytest.now, 'https://www.google.be/')
-
-    pytest.driver.get(selenium_utils.index_url)
-
-    assert pytest.driver.find_elements_by_css_selector('a[href="/moderate/4/2"]')
+    assert pytest.driver.find_elements_by_css_selector('a[href="/moderate/3/2"]')
 
 
 def test_publish_post_linkedin_2():
@@ -89,9 +80,9 @@ def test_publish_post_linkedin_2():
 
 
 def test_publish_post_slack_2():
-    selenium_utils.moderate_post(pytest.driver, 2, 4)
+    selenium_utils.moderate_post(pytest.driver, 2, 3)
 
-    assert not pytest.driver.find_elements_by_css_selector('a[href="/moderate/4/2"]')
+    assert not pytest.driver.find_elements_by_css_selector('a[href="/moderate/3/2"]')
 
 
 def test_add_post_linkedin_empty_title():

@@ -5,9 +5,11 @@ from smtplib import SMTPException
 from flask import current_app
 import json
 
-FIELDS_UNAVAILABLE = ['Title','Description']
+from superform import db
 
-CONFIG_FIELDS = ["sender","receiver"]
+FIELDS_UNAVAILABLE = ["Image"]
+
+CONFIG_FIELDS = ["sender", "receiver"]
 AUTH_FIELDS = False
 POST_FORM_VALIDATIONS = {}
 
@@ -32,13 +34,15 @@ def run(publishing,channel_config):
         smtpObj.sendmail(sender, receivers, text)
         smtpObj.quit()
     except SMTPException as e:
-        #TODO should add log here
+        # TODO should add log here
         print(e)
+    publishing.state = 1
+    db.session.commit()
 
-
-def authenticate(channel_name, publishing_id):
-    return "AlreadyAuthenticated"
-
+# Methods from other groups :
 
 def post_pre_validation(post):
     return 1;
+
+def authenticate(channel_name, publishing_id):
+    return 'AlreadyAuthenticated'

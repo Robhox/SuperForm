@@ -1,6 +1,5 @@
 import re
-from superform.posts import pre_validate_post
-from superform.models import Post
+
 
 
 def post_pre_validation_plugins(post, maxLengthTitle, maxLengthDescription):
@@ -12,54 +11,3 @@ def post_pre_validation_plugins(post, maxLengthTitle, maxLengthDescription):
     if post.image_url is not None and len(post.image_url) > 0:
         if re.match(pattern, post.image_url, 0) is None: return 0
     return 1
-
-def test_pre_validate_post_title(channel,maxLengthTitle):
-
-    post = Post
-    post.title = "x" * maxLengthTitle
-    post.description = "x"
-    post.link_url = "https://www.test.com"
-    post.image_url ="https://www.test.com"
-    assert pre_validate_post(channel, post) == 1
-    post.title += "x"
-    assert  pre_validate_post(channel,post) == 0
-    post.title = ""
-    assert  pre_validate_post(channel,post) == 0
-
-
-def test_pre_validate_post_description(channel, maxLengthDescription):
-    post = Post
-    post.title = "x"
-    post.description = "x" * maxLengthDescription
-    post.link_url = "https://www.test.com"
-    post.image_url = "https://www.test.com"
-    assert  pre_validate_post(channel,post) == 1
-    post.description += "x"
-    assert  pre_validate_post(channel,post) == 0
-    post.description = ""
-    assert  pre_validate_post(channel,post) == 0
-
-def test_pre_validate_post_Link_url(channel):
-    post = Post
-    post.title = "x"
-    post.description = "x"
-    post.link_url = "https://www.test.com"
-    post.image_url = "https://www.test.com"
-    assert  pre_validate_post(channel,post) == 1
-    post.link_url = "test error link"
-    assert  pre_validate_post(channel,post) == 0
-    post.link_url = ""
-    assert pre_validate_post(channel,post) == 1
-
-def test_pre_validate_post_img_url(channel):
-    post = Post
-    post.title = "x"
-    post.description = "x"
-    post.link_url = "https://www.test.com"
-    post.image_url = "https://www.test.com"
-    assert  pre_validate_post(channel,post) == 1
-    post.image_url = "test error link"
-    assert  pre_validate_post(channel,post) == 0
-    post.image_url = ""
-    assert pre_validate_post(channel,post) == 1
-

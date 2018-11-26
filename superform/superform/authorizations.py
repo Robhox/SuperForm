@@ -32,7 +32,6 @@ def authorizations():
                 permission = request.form.get('permission' + str(i))
 
                 a = Authorization(channel_id=channel_id, user_id=user_id, permission=permission)
-                print(a)
                 db.session.add(a)
             i = i + 1
 

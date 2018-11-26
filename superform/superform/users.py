@@ -2,7 +2,7 @@ from flask import Blueprint
 
 from superform.models import db, Authorization, Channel
 
-posts_page = Blueprint('users', __name__)
+user_page = Blueprint('users', __name__)
 
 def channels_available_for_user(userid):
     chans= []

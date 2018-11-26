@@ -1,13 +1,16 @@
-# Created by .ignore support plugin (hsz.mobi)
-superform/venv/
-.idea
-*.DS_Store
-superform/superform/__pycache__/
-/superform/superform/config.json
 .cache/*
+*.DS_Store
+.idea
+__pycache__/
 .pytest_cache/*
 /superform/.cache/*
 /superform/.pytest_cache/*
+/superform/setup.py/
+/superform/superform/config.json
 /superform/superform/superform.db
 *.pyc
 *.db
+/venv/
+/superform/superform/suputils/NewKey.key
+/superform/superform/suputils/Superform.kdbx
+/superform/superform/selenium_drivers/chromedriver

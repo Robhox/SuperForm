@@ -21,12 +21,17 @@ POST_FORM_VALIDATIONS = {
 
 
 def authenticate(channel_id, publishing_id):
-
+    """
+    Try to authenticate a channel based on channel_id
+    :param channel_id: Channel we try to authenticate
+    :param publishing_id: Publishing we want to publish on channel
+    :return: The authorization url if the channel token is absent or has expired else return 'AlreadyAuthenticated'
+    """
     previous_token = LinkedinTokens.get_token(LinkedinTokens, channel_id)
 
-    channel_name = Channel.query.get(channel_id)
+    channel_name = Channel.query.get(channel_id).name
 
-    if previous_token.__getitem__(0) is None or (datetime.now() > previous_token.__getitem__(1)) :
+    if previous_token.__getitem__(0) is None or (datetime.now() > previous_token.__getitem__(1)):
         conf = dict()
         conf["channel_name"] = channel_name
         conf["publishing_id"] = publishing_id
@@ -36,8 +41,15 @@ def authenticate(channel_id, publishing_id):
 
 
 def set_access_token(channel_id, code):
+    """
+    Bind access token with channel based on code and channel_id
+    :param channel_id: Channel we want to bind the token to
+    :param code: Contained in the callback response from linkedin
+    :return: channel_id config containing the token and expiration date
+    """
+    authentication.authorization_code = code
+    result = authentication.get_access_token()
 
-    #Add
     channel = Channel.query.get(channel_id)
     channel_name = channel.name
     # add the configuration to the channel
@@ -49,8 +61,17 @@ def set_access_token(channel_id, code):
     return conf
 
 
-def share_post(channel_id, comment, title, submitted_url,submitted_image_url,visibility_code):
-
+def share_post(channel_id, comment, title, submitted_url, submitted_image_url, visibility_code):
+    """
+    Publish a message on a linkedin channel,
+    :param channel_id: The id of the channel we want to publish to
+    :param comment:  The description of the post
+    :param title: The title of the post
+    :param submitted_url: The link contained in the post
+    :param submitted_image_url: The image contained in the post
+    :param visibility_code: Describe who can see this post
+    :return: True if the message is published else False
+    """
     token = LinkedinTokens.get_token(LinkedinTokens, channel_id).__getitem__(0)
     print('share_post token ', token)
     application = linkedin.LinkedInApplication(token=token)
@@ -66,8 +87,16 @@ def share_post(channel_id, comment, title, submitted_url,submitted_image_url,vis
 
 
 def auto_auth(url, channel_id):
+    """
+    :param url: url of the authentication page
+    :param channel_id: channel we try to authenticate
+    :return: A redirection to home if successful otherwise a redirection to an error page
+    """
+    if keepass.set_entry_from_keepass(str(channel_id)) is 0:
+        print('Error : cant get keepass entry :', str(channel_id), 'for linkedin plugin')
+        return redirect(url_for('keepass.error_channel_keepass', chan_id=channel_id))
 
-    driver = selenium_utils.get_chrome()
+    driver = selenium_utils.get_headless_chrome()
 
     driver.get(url)
     username = driver.find_element_by_name("session_key")
@@ -84,11 +113,15 @@ def auto_auth(url, channel_id):
 
 
 def run(publishing, channel_config):
+    """
+    Publish a Publishing on a channel
+    :param publishing: The publishing we want to publish
+    :param channel_config: The channel config of the channel we want to publish on
+    :return:
+    """
     print("publishing Linkedin", publishing)
     print("channel-conf", type(channel_config), channel_config)
     print("conf run", channel_config, type(channel_config))
-    conf = json.loads(channel_config)
-    channel_name = conf['channel_name']
     authenticate(publishing.channel_id, (publishing.post_id, publishing.channel_id))
 
     if share_post(publishing.channel_id, publishing.description, publishing.title, publishing.link_url, publishing.image_url, "anyone"):
@@ -97,6 +130,11 @@ def run(publishing, channel_config):
 
 
 def post_pre_validation(post):
+    """
+    Validate a post to be published with this linkedin
+    :param post: The Post we try to validate
+    :return: True if the post is valid for this module else False
+    """
     return plugin_utils.post_pre_validation_plugins(post,200,256)
 
 
@@ -125,6 +163,7 @@ class LinkedinTokens:
         c.config = json.dumps(config_json)
         print("put token", config_json)
         db.session.commit()
+
 
 @linkedin_verify_callback_page.route("/linkedin/verify", methods=['GET'])
 def linkedin_verify_authorization():

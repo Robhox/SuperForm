@@ -2,8 +2,14 @@ import json
 import ast
 
 from flask import Blueprint, current_app, url_for, request, redirect, render_template
+
+from superform.plugins.linkedin import authenticate
 from superform.utils import login_required, get_instance_from_module_path, get_modules_names, get_module_full_name
 from superform.models import db, Channel
+import ast
+
+from suputils import keepass
+
 channels_page = Blueprint('channels', __name__)
 
 
@@ -69,7 +75,7 @@ def configure_channel(id):
     for field in config_fields:
         if cfield > 0:
             str_conf += ","
-        str_conf += "\'" + field + "\' : \'" + request.form.get(field) + "\'"
+        str_conf += "\"" + field + "\" : \"" + request.form.get(field) + "\""
         cfield += 1
     str_conf += "}"
     c.config = str_conf

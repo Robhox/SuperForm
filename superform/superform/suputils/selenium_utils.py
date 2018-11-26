@@ -1,3 +1,4 @@
+import os
 import platform
 import sys
 import time
@@ -29,7 +30,8 @@ def get_chrome():
             return webdriver.Chrome(sys.path[0] + '\superform\selenium_drivers\chromedriver.exe')
         else:
             return webdriver.Chrome(sys.path[0] + '/superform/selenium_drivers/chromedriver')
-    except common.exceptions.WebDriverException:
+    except common.exceptions.WebDriverException as e:
+        print(e)
         print(
             'Can not find a valid selenium_drivers driver. it should be named chromedriver on linux or chromedriver.exe '
             'on windows and it should be located in the superform/selenium_drivers folder see this page for '

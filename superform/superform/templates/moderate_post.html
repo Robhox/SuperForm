@@ -4,7 +4,7 @@
     <h1>Moderate this publication</h1>
     {% if session.logged_in %}
         <form method="POST" action="">
-            <div class="row"  module-namechan="{{chan.module }}">
+            <div class="row"  module-namechan="{{channel.module }}">
                 <div class="col-md-12">
                     <div class="form-group">
                         <label for="titlepost">Title</label><br>
@@ -18,10 +18,61 @@
                         <label for="linkurlpost">Link</label><br>
                         <input type="text" name="linkurlpost" id="linkurlpost" class="form-control" value="{{ pub.link_url }}">
                     </div>
+                    {% if channel.module == "superform.plugins.gcal" %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                <label for="datedebut">Starting date</label><br>
+                                <input  type="date" name="datedebut" id="datedebut" class="form-control" value="{{ pub.date_start }}">
+                            </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="heuredebut">Starting time</label><br>
+                                    <input type="time" name="heuredebut" id="heuredebut"  class="form-control" value="{{ pub.hour_start }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="datefin">Ending date</label><br>
+                                    <input type="date" name="datefin" id="datefin" class="form-control" value="{{ pub.date_end }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="heurefin">Ending time</label><br>
+                                    <input type="time" name="heurefin" id="heurefin" class="form-control" value="{{ pub.hour_end }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="location">Location</label><br>
+                            <input type="text" name="location" id="location" class="form-control" value="{{ pub.location }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="color">Color</label><br>
+                            <input type="text" name="color" id="color" class="form-control" value="{{ pub.color_id }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="visibility">Visibility</label><br>
+                            <input type="text" name="visibility" id="visibility" class="form-control" value="{{ pub.visibility }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="availability">Availability</label><br>
+                            <input type="text" name="availability" id="availability" class="form-control" value="{{ pub.availability }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="guests">Guests emails</label><br>
+                            <input type="text" name="guests" id="guests" class="form-control" value="{{ pub.guests }}">
+                        </div>
+                    {% endif %}
                     <div class="form-group">
                         <label for="imagepost">Image</label><br>
                         <input type="file" name="imagepost" id="imagepost" class="form-control" value="{{ pub.image_url }}">
                     </div>
+                    {% if channel.module != "superform.plugins.gcal" %}
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
@@ -36,13 +87,13 @@
                             </div>
                         </div>
                     </div>
-
+                    {% endif %}
                 </div>
             </div>
             <button id="publish" class="btn btn-success">Publish</button>
         </form>
     {% else %}
-        Your are not logged in.
+        You are not logged in.
     {% endif %}
 {% endblock %}
 {% block scripts %}

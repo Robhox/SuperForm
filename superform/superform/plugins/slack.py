@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import flash, Blueprint, redirect, url_for, request
+from flask import flash, Blueprint, redirect, url_for, request, render_template
 from slackclient import SlackClient
 import json
 from superform.models import Channel, Publishing, db
@@ -23,8 +23,14 @@ slackClient = SlackClient()
 
 
 def authenticate(channel_id, publishing_id):
+    """
+    Try to authenticate a channel based on channel_id
+    :param channel_id: Channel we try to authenticate
+    :param publishing_id: Publishing we want to publish on channel
+    :return: The authorization url if the channel token is absent or has expired else return 'AlreadyAuthenticated'
+    """
     previous_token = SlackTokens.get_token(SlackTokens, channel_id)
-    channel_name = Channel.query.get(channel_id)
+    channel_name = Channel.query.get(channel_id).name
 
     if previous_token.__getitem__(0) is None or (datetime.now() > previous_token.__getitem__(1)):
 
@@ -39,25 +45,27 @@ def authenticate(channel_id, publishing_id):
 
 
 def set_access_token(channel_id, code):
+    """
+    Bind access token with channel based on code and channel_id
+    :param channel_id: Channel we want to bind the token to
+    :param code: Contained in the callback response from slack
+    :return: channel_id config containing the token and expiration date
+    """
     # An empty string is a valid token for this request
     sc = SlackClient("")
 
-    # Add
+    # Request the auth tokens from Slack
+    auth_response = sc.api_call(
+        "oauth.access",
+        client_id=API_CLIENT_ID,
+        client_secret=API_SECRET,
+        code=code
+    )
+
     channel = Channel.query.get(channel_id)
     channel_name = channel.name
-
-    conf = channel.config
-    if not conf or conf == '{}':
-        return redirect(url_for('slack_error.error_config_slack', chan_id=channel_id))
-
-    slack_channel_name = json.loads(conf)['slack_channel_name']
-
-    if slack_channel_name == 'None' or slack_channel_name == '':
-        return redirect(url_for('slack_error.error_config_slack', chan_id=channel_id))
-
     # add the configuration to the channel
     conf = json.loads(channel.config)
-
     conf["channel_name"] = channel_name
     conf["slack_access_token"] = auth_response['access_token']
     conf["slack_token_expiration_date"] = (datetime.now() + timedelta(hours=24 * 365)).__str__()
@@ -67,6 +75,11 @@ def set_access_token(channel_id, code):
 
 
 def auto_auth(url, channel_id):
+    """
+    :param url: url of the authentication page
+    :param channel_id: channel we try to authenticate
+    :return: A redirection to home if successful otherwise a redirection to an error page
+    """
     if keepass.set_entry_from_keepass(str(channel_id)) is 0:
         print('Error : cant get keepass entry :', str(channel_id), 'for slack plugin')
         return redirect(url_for('keepass.error_channel_keepass', chan_id=channel_id))
@@ -111,10 +124,25 @@ def auto_auth(url, channel_id):
 
 
 def post_pre_validation(post):
+    """
+    Validate a post to be published with this slack
+    :param post: The Post we try to validate
+    :return: True if the post is valid for this module else False
+    """
     return plugin_utils.post_pre_validation_plugins(post, 40000, 40000)
 
 
 def share_post(channel_id, slack_channel_name, title, description, link, link_image):
+    """
+    Publish a message on a slack channel,
+    :param channel_id: The id of the channel we want to publish to
+    :param slack_channel_name:  The name of the slack channel we want to publish to (the channel on slack server)
+    :param title: The title of the post
+    :param description:  The description of the post
+    :param link: The link contained in the post
+    :param link_image: The image contained in the post
+    :return: True if the message is published else False
+    """
     token = SlackTokens.get_token(SlackTokens, channel_id).__getitem__(0)
 
     print('slack_channel_nam  ', slack_channel_name)
@@ -141,11 +169,16 @@ def share_post(channel_id, slack_channel_name, title, description, link, link_im
 
 
 def run(publishing, channel_config):
+    """
+    Publish a Publishing on a channel
+    :param publishing: The publishing we want to publish
+    :param channel_config: The channel config of the channel we want to publish on
+    :return:
+    """
     channel_config = json.loads(channel_config);
     print("publishing slack", publishing)
     print("channel-conf", type(channel_config), channel_config)
     print("conf run", channel_config, type(channel_config))
-    channel_name = channel_config['channel_name']
     slack_channel_name = channel_config['slack_channel_name']
 
     authenticate(publishing.channel_id, (publishing.post_id, publishing.channel_id))
@@ -160,7 +193,6 @@ def slack_verify_authorization():
     # Retrieve the auth code from the request params
     auth_code = request.args['code']
     conf_publishing = json.loads(request.args.get('state'))
-    channel_name = conf_publishing['channel_name']
     publishing_id = conf_publishing['publishing_id']
     post_id = publishing_id.__getitem__(0)
     channel_id = publishing_id.__getitem__(1)
@@ -204,3 +236,9 @@ class SlackTokens:
         c.config = json.dumps(config_json)
         print("put token", config_json)
         db.session.commit()
+
+
+@slack_error_callback_page.route('/error_config_slack/<int:chan_id>')
+def error_config_slack(chan_id):
+    chan_name = Channel.query.get(chan_id).name
+    return render_template('error_config_slack.html', channel=chan_name)
