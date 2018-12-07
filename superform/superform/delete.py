@@ -1,15 +1,14 @@
-from flask import redirect, url_for, request, Blueprint
+from flask import redirect, url_for, Blueprint, flash
 from superform.models import db, Post, Publishing, Channel
 from superform.utils import login_required
 
 """
-delete(id, idc) first show a pop-up window to ask confirmation to the user. If the lattest clicks 'OK',
-then it will query the plugin and its channel from the the database, using @id and @idc, in order to 
+delete(id, idc) will first query the plugin and its channel from the the database, using @id of the post, in order to 
 get the concerned module.
 It then calls the deletable() method of the concerned module. If true, the delete(pub) method is called
 from the module, and then delete it from the database. Otherwise, it will call can_be_deleted(id, idc) to 
 ask the module if the publishing can be deleted from the database anyway.
-Eventually, delete(id, idc) tries to query any publishing from the post which id is @id. If the result
+Eventually, delete(id) tries to query any publishing from the post which id is @id. If the result
 is null, then the post is deleted from database.
 """
 
@@ -31,21 +30,18 @@ def delete(id):
             db.session.delete(pub)
         elif not(can_be_deleted(pub)):
             #display error message
-            print("Error : this publishing cannot be deleted")
+            flash("Publishing on " + pub.channel_id + " cannot be deleted.", 'error')
         else:
             # database deletion
             db.session.delete(pub)
     post = db.session.query(Post).filter(Post.id == id).first()
     if can_be_deleted(post):
-        print("Post successfully deleted")
+        flash("Post \"" + post.title + "\"  successfully deleted", 'info')
         db.session.delete(post)
     else:
-        print("Post couldn't be deleted because some publishing couldn't be deleted")
+        flash("Post \"" + post.title + "\" couldn't be deleted because some publishing couldn't be deleted.", 'error')
     db.session.commit()
     return redirect(url_for('index'))
-    # html correction
-    # reload the index page without the deleted publishing
-    # show a pop-up saying that it is a success (or a fail), with a OK button
 
 
 def can_be_deleted(publishing):
